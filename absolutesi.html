@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AbsoluteSI</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #ff1a1a;
+    --dark: #0a0a0a;
+    --card: rgba(255,255,255,0.04);
+    --glow: 0 0 30px rgba(255,26,26,0.35);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--dark); color: #fff;
+    font-family: 'Montserrat', sans-serif;
+    min-height: 100vh; overflow-x: hidden;
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(255,26,26,0.18) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 40% at 80% 80%, rgba(255,0,0,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 30% at 20% 90%, rgba(200,0,0,0.07) 0%, transparent 50%);
+  }
+  .noise {
+    position: fixed; inset: 0; opacity: 0.025; z-index: 0; pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .wrap {
+    position: relative; z-index: 1;
+    max-width: 480px; margin: 0 auto;
+    padding: 0 16px 140px;
+  }
+
+  /* HEADER */
+  .header { text-align: center; padding: 50px 0 28px; animation: fadeDown 0.8s ease both; }
+  .avatar-ring {
+    width: 90px; height: 90px; margin: 0 auto 18px;
+    position: relative; display: inline-block;
+  }
+  .avatar-ring::before {
+    content: ''; position: absolute; inset: -4px; border-radius: 50%;
+    background: conic-gradient(var(--red), #ff6600, var(--red), #660000, var(--red));
+    animation: spin 3s linear infinite; z-index: 0;
+  }
+  .avatar-inner {
+    position: relative; z-index: 1;
+    width: 90px; height: 90px; border-radius: 50%;
+    background: #1a0000; display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', sans-serif; font-size: 32px; color: var(--red); letter-spacing: 2px;
+    box-shadow: var(--glow); border: 2px solid var(--dark);
+  }
+  .name {
+    font-family: 'Bebas Neue', sans-serif; font-size: 42px; letter-spacing: 6px;
+    text-shadow: 0 0 30px rgba(255,26,26,0.6), 0 0 60px rgba(255,26,26,0.2); line-height: 1;
+  }
+  .subtitle { font-size: 11px; letter-spacing: 4px; color: rgba(255,255,255,0.35); text-transform: uppercase; margin-top: 6px; }
+  .pills { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 18px; }
+  .pill {
+    background: rgba(255,26,26,0.1); border: 1px solid rgba(255,26,26,0.3);
+    padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;
+    color: rgba(255,255,255,0.75); letter-spacing: 1px;
+  }
+  .pill span { color: var(--red); }
+
+  /* TABS */
+  .tabs {
+    display: flex; gap: 4px;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 14px; padding: 5px; margin: 28px 0 24px;
+    animation: fadeUp 0.8s 0.2s ease both;
+  }
+  .tab {
+    flex: 1; padding: 10px 4px; border-radius: 10px; border: none;
+    background: transparent; color: rgba(255,255,255,0.4);
+    font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 3px;
+    cursor: pointer; transition: all 0.25s;
+  }
+  .tab.active { background: var(--red); color: #fff; box-shadow: 0 0 20px rgba(255,26,26,0.5); }
+
+  .section { display: none; animation: fadeUp 0.4s ease both; }
+  .section.active { display: block; }
+
+  /* CARD */
+  .card {
+    background: var(--card); border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 16px; padding: 18px 20px; margin-bottom: 14px;
+    backdrop-filter: blur(10px); position: relative; overflow: hidden;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+  .card:hover { border-color: rgba(255,26,26,0.3); box-shadow: 0 0 20px rgba(255,26,26,0.1); }
+  .card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,26,26,0.4), transparent);
+  }
+  .card-title { font-size: 10px; letter-spacing: 3px; color: var(--red); text-transform: uppercase; font-weight: 700; margin-bottom: 12px; }
+  .info-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px;
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-label { color: rgba(255,255,255,0.4); font-size: 12px; }
+  .info-val { color: #fff; font-weight: 600; }
+  .info-val a { color: var(--red); text-decoration: none; }
+  .friends-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .friend-tag {
+    background: rgba(255,26,26,0.1); border: 1px solid rgba(255,26,26,0.25);
+    padding: 5px 12px; border-radius: 20px; font-size: 12px;
+    color: rgba(255,255,255,0.8); text-decoration: none; transition: all 0.2s;
+  }
+  .friend-tag:hover { background: rgba(255,26,26,0.25); color: #fff; }
+  .tags { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tag {
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    padding: 4px 10px; border-radius: 6px; font-size: 12px; color: rgba(255,255,255,0.6);
+  }
+  .rule-box {
+    background: rgba(255,26,26,0.07); border: 1px solid rgba(255,26,26,0.2);
+    border-radius: 12px; padding: 14px 16px; margin-bottom: 14px;
+    font-size: 12px; color: rgba(255,255,255,0.7); line-height: 1.8;
+  }
+  .rule-box strong { color: var(--red); }
+
+  /* LINK BUTTONS */
+  .link-btn {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--card); border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 14px; padding: 14px 18px; margin-bottom: 10px;
+    text-decoration: none; color: #fff; font-size: 14px; font-weight: 600;
+    transition: all 0.25s; backdrop-filter: blur(10px); position: relative; overflow: hidden;
+  }
+  .link-btn:hover { border-color: rgba(255,26,26,0.5); box-shadow: 0 0 25px rgba(255,26,26,0.2); transform: translateX(3px); }
+  .link-btn::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,26,26,0.4), transparent);
+  }
+  .link-icon {
+    width: 38px; height: 38px; background: rgba(255,26,26,0.15); border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; font-size: 18px;
+    flex-shrink: 0; border: 1px solid rgba(255,26,26,0.3);
+  }
+  .link-arrow { margin-left: auto; color: var(--red); font-size: 18px; }
+
+  /* SHOP */
+  .price-card {
+    background: var(--card); border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 16px; margin-bottom: 14px; overflow: hidden;
+  }
+  .price-header {
+    padding: 14px 20px; background: rgba(255,26,26,0.12);
+    border-bottom: 1px solid rgba(255,26,26,0.2);
+    font-size: 14px; font-weight: 700; letter-spacing: 0.5px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .badge {
+    margin-left: auto; background: rgba(255,26,26,0.2); border: 1px solid rgba(255,26,26,0.4);
+    padding: 2px 8px; border-radius: 6px; font-size: 10px; letter-spacing: 2px; color: var(--red);
+  }
+  .price-table { padding: 8px 16px 12px; }
+  .sub-label {
+    font-size: 10px; letter-spacing: 3px; color: rgba(255,255,255,0.25);
+    text-transform: uppercase; padding: 10px 0 5px; text-align: center;
+  }
+  .price-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 9px 4px; border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .price-row:last-child { border-bottom: none; }
+  .price-row.top {
+    background: rgba(255,26,26,0.07); margin: 0 -4px; padding: 9px 8px;
+    border-radius: 6px; border-color: transparent;
+    border-left: 2px solid var(--red);
+  }
+  .pq { font-size: 13px; color: rgba(255,255,255,0.8); }
+  .ps { font-size: 13px; font-weight: 700; }
+  .ps span { color: var(--red); }
+  .note-box {
+    margin: 4px 0 2px; padding: 7px 10px; border-radius: 8px; font-size: 11px;
+    background: rgba(255,200,0,0.05); border: 1px solid rgba(255,200,0,0.2);
+    color: rgba(255,220,0,0.8);
+  }
+  .note-box.green {
+    background: rgba(0,255,136,0.04); border-color: rgba(0,255,136,0.2); color: rgba(0,255,136,0.8);
+  }
+
+  .admin-box {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--card); border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 14px; padding: 14px 18px; margin-bottom: 14px;
+  }
+  .admin-status { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #00ff88; box-shadow: 0 0 10px #00ff88; animation: pulse 2s infinite; }
+
+  .promo-box {
+    background: linear-gradient(135deg, rgba(255,26,26,0.15), rgba(255,26,26,0.04));
+    border: 1px solid rgba(255,26,26,0.5); border-radius: 16px;
+    padding: 22px 20px; text-align: center; margin-bottom: 14px; position: relative; overflow: hidden;
+  }
+  .promo-box::before { content: '🔥'; position: absolute; top: -10px; right: 16px; font-size: 50px; opacity: 0.08; }
+  .promo-label { font-size: 11px; letter-spacing: 3px; color: rgba(255,255,255,0.5); text-transform: uppercase; }
+  .promo-week { font-size: 10px; color: rgba(255,255,255,0.3); margin-top: 3px; }
+  .promo-code {
+    font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 8px;
+    color: var(--red); text-shadow: 0 0 20px rgba(255,26,26,0.6);
+    display: block; margin: 10px 0 14px;
+  }
+  .copy-btn {
+    background: var(--red); border: none; padding: 11px 28px; border-radius: 10px;
+    color: #fff; font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 13px;
+    cursor: pointer; letter-spacing: 1px; transition: all 0.2s; box-shadow: 0 4px 20px rgba(255,26,26,0.4);
+  }
+  .copy-btn:hover { transform: scale(1.05); box-shadow: 0 6px 30px rgba(255,26,26,0.6); }
+
+  /* MUSIC PLAYER */
+  .music-player {
+    position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+    width: calc(100% - 32px); max-width: 448px;
+    background: rgba(8,0,0,0.96); border: 1px solid rgba(255,26,26,0.45);
+    border-radius: 18px; overflow: hidden; backdrop-filter: blur(24px); z-index: 100;
+    box-shadow: 0 8px 40px rgba(255,26,26,0.3), 0 0 0 1px rgba(255,255,255,0.03);
+  }
+  .sc-hidden {
+    position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none;
+  }
+  .progress-bar { width: 100%; height: 3px; background: rgba(255,255,255,0.08); cursor: pointer; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--red), #ff6600); width: 0%; transition: width 0.5s linear; box-shadow: 0 0 8px rgba(255,26,26,0.6); }
+  .player-inner { display: flex; align-items: center; gap: 12px; padding: 12px 16px 8px; }
+  .music-art {
+    width: 44px; height: 44px; background: rgba(255,26,26,0.15); border-radius: 10px;
+    border: 1px solid rgba(255,26,26,0.35); display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0;
+  }
+  .disc { display: inline-block; animation: spin 3s linear infinite; animation-play-state: paused; }
+  .disc.spin { animation-play-state: running; }
+  .music-info { flex: 1; min-width: 0; }
+  .music-track { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .music-artist { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+  .m-controls { display: flex; align-items: center; gap: 10px; }
+  .music-bars { display: flex; gap: 2px; align-items: flex-end; height: 18px; }
+  .bar { width: 3px; background: var(--red); border-radius: 2px; animation: bar-b 0.8s ease infinite; animation-play-state: paused; }
+  .bar:nth-child(1){height:6px;animation-delay:0s}
+  .bar:nth-child(2){height:14px;animation-delay:.15s}
+  .bar:nth-child(3){height:9px;animation-delay:.3s}
+  .bar:nth-child(4){height:14px;animation-delay:.1s}
+  .bar:nth-child(5){height:7px;animation-delay:.22s}
+  .bars-on .bar { animation-play-state: running; }
+  .play-btn {
+    width: 38px; height: 38px; background: var(--red); border-radius: 50%; border: none;
+    color: #fff; font-size: 14px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 18px rgba(255,26,26,0.55); transition: all 0.2s; flex-shrink: 0;
+  }
+  .play-btn:hover { transform: scale(1.12); }
+  .vol-row { display: flex; align-items: center; gap: 8px; padding: 2px 16px 11px; }
+  .vi { font-size: 12px; color: rgba(255,255,255,0.35); }
+  .vol-slider { flex: 1; -webkit-appearance: none; height: 3px; border-radius: 2px; background: rgba(255,255,255,0.12); outline: none; }
+  .vol-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--red); cursor: pointer; box-shadow: 0 0 8px rgba(255,26,26,0.6); }
+  .sc-note { text-align: center; font-size: 9px; color: rgba(255,255,255,0.13); padding: 0 0 8px; letter-spacing: 1px; }
+
+  @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.3)} }
+  @keyframes fadeDown { from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes bar-b { 0%,100%{transform:scaleY(0.3)} 50%{transform:scaleY(1)} }
+</style>
+</head>
+<body>
+
+<div class="noise"></div>
+
+<div class="wrap">
+
+  <div class="header">
+    <div class="avatar-ring"><div class="avatar-inner">AS</div></div>
+    <div class="name">AbsoluteSI</div>
+    <div class="subtitle">Bio / Links / Shop</div>
+    <div class="pills">
+      <div class="pill">🇺🇿 <span>Узбекистан</span></div>
+      <div class="pill">TikTok <span>3200</span></div>
+      <div class="pill">🎂 <span>05.12</span></div>
+      <div class="pill"><span>+998</span></div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('bio')">BIO</button>
+    <button class="tab" onclick="switchTab('shop')">ПРОДАЖА</button>
+    <button class="tab" onclick="switchTab('links')">ССЫЛКИ</button>
+  </div>
+
+  <!-- BIO -->
+  <div id="bio" class="section active">
+    <div class="card">
+      <div class="card-title">📋 Инфо</div>
+      <div class="info-row"><span class="info-label">Имя</span><span class="info-val">AbsoluteSI</span></div>
+      <div class="info-row"><span class="info-label">Цель</span><span class="info-val">10 000 сабов</span></div>
+      <div class="info-row"><span class="info-label">Любимый испольнител</span><span class="info-val">#dabbackwood</span></div>
+      <div class="info-row"><span class="info-label">Любимый трек</span><span class="info-val">«клоун»</span></div>
+      <div class="info-row"><span class="info-label">Я фанатик</span><span class="info-val"><a href="https://t.me/qniik" target="_blank">@qniik</a></span></div>
+      <div class="info-row"><span class="info-label">Юз</span><span class="info-val"><a href="https://t.me/AbsoluteSI13_xz" target="_blank">@AbsoluteSI13_xz</a></span></div>
+      <div class="info-row"><span class="info-label">Менеджер</span><span class="info-val"><a href="https://t.me/AbsoluteSI_snos" target="_blank">@AbsoluteSI_snos</a></span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">👥 Друзья</div>
+      <div class="friends-grid">
+        <a href="https://t.me/reduns" target="_blank" class="friend-tag">@reduns</a>
+        <a href="https://t.me/OnlyKerya" target="_blank" class="friend-tag">@OnlyKerya</a>
+        <a href="https://t.me/Flipflopdjd" target="_blank" class="friend-tag">@Flipflopdjd</a>
+        <a href="https://t.me/xxisna" target="_blank" class="friend-tag">@xxisna</a>
+        <a href="https://t.me/Golds900" target="_blank" class="friend-tag">@Golds900</a>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">#Теги</div>
+      <div class="tags">
+        <span class="tag">#dabbackwood</span>
+        <span class="tag">#MGZD</span>
+        <span class="tag">#911</span>
+      </div>
+    </div>
+    <div class="rule-box">
+      ⚠️ <strong>Правила:</strong> угрозы = ЧС <br>
+      🛡️ <strong>Защита:</strong>
+      <a href="https://t.me/wecup85" target="_blank" style="color:var(--red)">@wecup85</a> и
+      <a href="https://t.me/Def_smert" target="_blank" style="color:var(--red)">@Def_smert</a>
+    </div>
+  </div>
+
+  <!-- SHOP -->
+  <div id="shop" class="section">
+
+    <!-- GOLD -->
+    <div class="price-card">
+      <div class="price-header"><span>🍯</span> GOLD — RINOK ORQALI <span class="badge">GAME</span></div>
+      <div class="price-table">
+        <div class="price-row"><span class="pq">🤍 100 gold</span><span class="ps"><span>20 000</span> сум</span></div>
+        <div class="price-row"><span class="pq">🤍 200 gold</span><span class="ps"><span>35 000</span> сум</span></div>
+        <div class="price-row"><span class="pq">🤍 500 gold</span><span class="ps"><span>85 000</span> сум</span></div>
+        <div class="price-row"><span class="pq">🤍 1 000 gold</span><span class="ps"><span>150 000</span> сум</span></div>
+        <div class="price-row"><span class="pq">🤍 3 000 gold</span><span class="ps"><span>400 000</span> сум</span></div>
+        <div class="price-row"><span class="pq">🤍 5 000 gold</span><span class="ps"><span>650 000</span> сум</span></div>
+        <div class="price-row top"><span class="pq">🤍 10 000 gold</span><span class="ps"><span>1 300 000</span> сум</span></div>
+        <div class="note-box">⌛ Срок поступления: 1–6 часов</div>
+      </div>
+    </div>
+
+    <!-- TG PREMIUM -->
+    <div class="price-card">
+      <div class="price-header"><span>⭐</span> Telegram Premium</div>
+      <div class="price-table">
+        <div class="sub-label">С входом в аккаунт</div>
+        <div class="price-row"><span class="pq">🎁 1 месяц</span><span class="ps"><span>60 000</span> сум</span></div>
+        <div class="price-row top"><span class="pq">🎁 12 месяцев</span><span class="ps"><span>370 000</span> сум</span></div>
+        <div class="sub-label">Без входа в аккаунт</div>
+        <div class="price-row"><span class="pq">🎁 3 месяца</span><span class="ps"><span>235 000</span> сум</span></div>
+        <div class="price-row"><span class="pq">🎁 6 месяцев</span><span class="ps"><span>320 000</span> сум</span></div>
+        <div class="price-row top"><span class="pq">🎁 12 месяцев</span><span class="ps"><span>500 000</span> сум</span></div>
+      </div>
+    </div>
+
+    <!-- TG STARS -->
+    <div class="price-card">
+      <div class="price-header"><span>⭐</span> TG Stars <span class="badge">USERNAME</span></div>
+      <div class="price-table">
+        <div class="price-row"><span class="pq">⭐ 100 stars</span><span class="ps"><span>35 000</span> сум</span></div>
+        <div class="price-row"><span class="pq">⭐ 250 stars</span><span class="ps"><span>75 000</span> сум</span></div>
+        <div class="price-row"><span class="pq">⭐ 500 stars</span><span class="ps"><span>160 000</span> сум</span></div>
+        <div class="price-row top"><span class="pq">⭐ 1 000 stars</span><span class="ps"><span>320 000</span> сум</span></div>
+      </div>
+    </div>
+
+    <!-- ROBLOX -->
+    <div class="price-card">
+      <div class="price-header"><span>🎮</span> Roblox Robux</div>
+      <div class="price-table">
+        <div class="sub-label">Через Game Pass</div>
+        <div class="price-row"><span class="pq">🌟 200 Robux</span><span class="ps"><span>55 000</span> сум</span></div>
+        <div class="price-row"><span class="pq">🌟 500 Robux</span><span class="ps"><span>102 000</span> сум</span></div>
+        <div class="price-row top"><span class="pq">🌟 1 000 Robux</span><span class="ps"><span>190 000</span> сум</span></div>
+        <div class="note-box">‼️ Вывод: 5–7 дней</div>
+        <div class="sub-label">Через игру ⚡</div>
+        <div class="price-row"><span class="pq">🌟 500 Robux</span><span class="ps"><span>115 000</span> сум</span></div>
+        <div class="price-row top"><span class="pq">🌟 1 000 Robux</span><span class="ps"><span>210 000</span> сум</span></div>
+        <div class="note-box green">✅ Вывод сразу</div>
+      </div>
+    </div>
+
+    <!-- MLBB -->
+    <div class="price-card">
+      <div class="price-header"><span>🔫</span> MLBB — ID ORQALI <span class="badge">GLOBAL</span></div>
+      <div class="price-table">
+        <div class="price-row"><span class="pq">💎 86</span><span class="ps"><span>20 000</span> uzs</span></div>
+        <div class="price-row"><span class="pq">💎 172</span><span class="ps"><span>40 000</span> uzs</span></div>
+        <div class="price-row"><span class="pq">💎 257</span><span class="ps"><span>55 000</span> uzs</span></div>
+        <div class="price-row top"><span class="pq">💎 344 🔝</span><span class="ps"><span>72 000</span> uzs</span></div>
+        <div class="price-row"><span class="pq">💎 429</span><span class="ps"><span>90 000</span> uzs</span></div>
+        <div class="price-row"><span class="pq">💎 514</span><span class="ps"><span>105 000</span> uzs</span></div>
+        <div class="price-row top"><span class="pq">💎 600 🔝</span><span class="ps"><span>125 000</span> uzs</span></div>
+        <div class="price-row"><span class="pq">💎 706</span><span class="ps"><span>143 000</span> uzs</span></div>
+        <div class="price-row"><span class="pq">💎 963</span><span class="ps"><span>190 000</span> uzs</span></div>
+        <div class="price-row top"><span class="pq">💎 1 171 🔝</span><span class="ps"><span>230 000</span> uzs</span></div>
+        <div class="price-row"><span class="pq">💎 1 412</span><span class="ps"><span>275 000</span> uzs</span></div>
+        <div class="price-row"><span class="pq">💎 2 367</span><span class="ps"><span>445 000</span> uzs</span></div>
+        <div class="price-row"><span class="pq">💎 2 901</span><span class="ps"><span>560 000</span> uzs</span></div>
+        <div class="price-row top"><span class="pq">💎 4 032 🔝</span><span class="ps"><span>780 000</span> uzs</span></div>
+        <div class="price-row"><span class="pq">💎 4 738</span><span class="ps"><span>890 000</span> uzs</span></div>
+        <div class="price-row"><span class="pq">💎 6 048</span><span class="ps"><span>1 150 000</span> uzs</span></div>
+        <div class="price-row"><span class="pq">💎 7 727</span><span class="ps"><span>1 450 000</span> uzs</span></div>
+        <div class="price-row top"><span class="pq">💎 10 080 🔝</span><span class="ps"><span>1 830 000</span> uzs</span></div>
+        <div class="sub-label">Сумеречный Пропуск</div>
+        <div class="price-row top"><span class="pq">🗂 Twilight Pass ⭐</span><span class="ps"><span>120 000</span> uzs</span></div>
+      </div>
+    </div>
+
+    <div class="admin-box">
+      <div class="admin-status"><div class="dot"></div> ADMIN ONLINE 😎</div>
+      <a href="https://t.me/AbsoluteSI_MGZD" target="_blank" style="color:var(--red);font-size:13px;font-weight:700;text-decoration:none">@AbsoluteSI_MGZD →</a>
+    </div>
+
+    <div class="promo-box">
+      <div class="promo-label">🔥 Промокод недели</div>
+      <div class="promo-week">Секретный бонус — действует ограниченно!</div>
+      <span class="promo-code">lovevesna</span>
+      <button class="copy-btn" onclick="copyPromo()">📋 Копировать промокод</button>
+    </div>
+
+    <a href="https://t.me/otsivkanal" target="_blank" class="link-btn">
+      <div class="link-icon">⭐</div>
+      Отзывы
+      <span class="link-arrow">→</span>
+    </a>
+  </div>
+
+  <!-- LINKS -->
+  <div id="links" class="section">
+    <a href="https://t.me/AbsoluteSI_tg" target="_blank" class="link-btn">
+      <div class="link-icon">✈️</div>ТГК @AbsoluteSI_tg<span class="link-arrow">→</span>
+    </a>
+    <a href="https://t.me/chatAbsolutesi" target="_blank" class="link-btn">
+      <div class="link-icon">💬</div>Чат ТГК<span class="link-arrow">→</span>
+    </a>
+    <a href="https://t.me/Absolute_donat" target="_blank" class="link-btn">
+      <div class="link-icon">🛒</div>Продажа<span class="link-arrow">→</span>
+    </a>
+    <a href="https://t.me/+8hPuOXT5uMk4NmYy" target="_blank" class="link-btn">
+      <div class="link-icon">🔗</div>Чат продажи<span class="link-arrow">→</span>
+    </a>
+    <a href="https://t.me/otsivkanal" target="_blank" class="link-btn">
+      <div class="link-icon">⭐</div>Отзывы<span class="link-arrow">→</span>
+    </a>
+    <a href="https://t.me/cardAbsolute" target="_blank" class="link-btn">
+      <div class="link-icon">🃏</div>Card<span class="link-arrow">→</span>
+    </a>
+    <a href="https://soundcloud.com/dabbackwood64045/kloun" target="_blank" class="link-btn">
+      <div class="link-icon">🎵</div>dabbackwood — клоун (SoundCloud)<span class="link-arrow">→</span>
+    </a>
+  </div>
+
+  <div style="height:110px"></div>
+</div>
+
+<!-- MUSIC PLAYER -->
+<div class="music-player">
+  <iframe class="sc-hidden" id="sc"
+    src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/dabbackwood64045/kloun&color=%23ff1a1a&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false"
+    width="100%" height="1" scrolling="no" frameborder="no" allow="autoplay">
+  </iframe>
+  <div class="progress-bar" id="pbar" onclick="seek(event)">
+    <div class="progress-fill" id="pfill"></div>
+  </div>
+  <div class="player-inner">
+    <div class="music-art"><span class="disc" id="disc">🎵</span></div>
+    <div class="music-info">
+      <div class="music-track">клоун</div>
+      <div class="music-artist">dabbackwood</div>
+    </div>
+    <div class="m-controls">
+      <div class="music-bars" id="bars">
+        <div class="bar"></div><div class="bar"></div>
+        <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+      </div>
+      <button class="play-btn" id="pbtn" onclick="togglePlay()">▶</button>
+    </div>
+  </div>
+  <div class="vol-row">
+    <span class="vi">🔈</span>
+    <input type="range" class="vol-slider" id="vol" min="0" max="100" value="70" oninput="setVol(this.value)">
+    <span class="vi">🔊</span>
+  </div>
+  <div class="sc-note">♫ dabbackwood — клоун · SoundCloud</div>
+</div>
+
+<script>
+let widget = null, playing = false, ptimer = null;
+
+function loadSC() {
+  const iframe = document.getElementById('sc');
+  widget = SC.Widget(iframe);
+  widget.bind(SC.Widget.Events.READY, () => widget.setVolume(70));
+  widget.bind(SC.Widget.Events.PLAY, () => setState(true));
+  widget.bind(SC.Widget.Events.PAUSE, () => setState(false));
+  widget.bind(SC.Widget.Events.FINISH, () => setState(false));
+}
+
+window.addEventListener('load', () => {
+  const s = document.createElement('script');
+  s.src = 'https://w.soundcloud.com/player/api.js';
+  s.onload = loadSC;
+  document.head.appendChild(s);
+});
+
+function togglePlay() {
+  if (!widget) return;
+  playing ? widget.pause() : widget.play();
+}
+
+function setState(p) {
+  playing = p;
+  document.getElementById('pbtn').textContent = p ? '⏸' : '▶';
+  document.getElementById('bars').classList.toggle('bars-on', p);
+  document.getElementById('disc').classList.toggle('spin', p);
+  if (p) {
+    ptimer = setInterval(() => {
+      widget.getPosition(pos => widget.getDuration(dur => {
+        if (dur > 0) document.getElementById('pfill').style.width = (pos/dur*100)+'%';
+      }));
+    }, 500);
+  } else {
+    clearInterval(ptimer);
+  }
+}
+
+function seek(e) {
+  if (!widget) return;
+  const pct = e.offsetX / document.getElementById('pbar').offsetWidth;
+  widget.getDuration(dur => widget.seekTo(dur * pct));
+}
+
+function setVol(v) { if (widget) widget.setVolume(parseInt(v)); }
+
+function switchTab(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(name).classList.add('active');
+  ['bio','shop','links'].forEach((t,i) => {
+    if (t === name) document.querySelectorAll('.tab')[i].classList.add('active');
+  });
+}
+
+function copyPromo() {
+  navigator.clipboard.writeText('lovevesna').then(() => {
+    const b = document.querySelector('.copy-btn');
+    b.textContent = '✅ Скопировано!';
+    setTimeout(() => b.textContent = '📋 Копировать промокод', 2000);
+  });
+}
+</script>
+</body>
+</html>
